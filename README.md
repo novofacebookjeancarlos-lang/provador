@@ -59,3 +59,12 @@ Em loja própria, use o código gerado em “Instalar botão na vitrine”.
 Associe os IDs das variantes no painel e atualize o atributo data-variante
 do elemento provador-vitrine ao trocar a seleção. O widget abre o provador
 no domínio da plataforma. Cada loja usa seu próprio ID, catálogo e saldo.
+
+## Onde encontrar cada funcionalidade
+
+- `app/painel`: tela do lojista, catálogo e recargas em componentes separados.
+- `app/api/loja`: sessão, catálogo, recargas e administração. A rota autentica
+  a requisição e delega à funcionalidade correspondente.
+- `app/admin`: administração global. `app/testar` e `app/api/prova`: provador.
+- `app/instalar`, `app/api/vitrine` e `public/provador.js`: instalação na vitrine.
+- `supabase/migrations`: regras de dados, permissões e saldo.
