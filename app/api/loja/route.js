@@ -20,7 +20,12 @@ async function owner() {
 export async function GET() {
   try {
     const id = await owner()
-    return id ? json({ dashboard: await rpc('pilot_dashboard', { p_owner: id }) }) : error('Entre na sua conta.', 401)
+    if (!id) return error('Entre na sua conta.', 401)
+    const [dashboard, variants] = await Promise.all([
+      rpc('pilot_dashboard', { p_owner: id }), rpc('pilot_variants', { p_owner: id }),
+    ])
+    if (dashboard) dashboard.variants = variants
+    return json({ dashboard })
   } catch {
     return error('Painel indisponível. Tente novamente.', 503)
   }
@@ -61,6 +66,17 @@ export async function POST(request) {
       if (!uuid.test(piece)) return error('Peça inválida.')
       const changed = await rpc('pilot_toggle_piece', { p_owner: id, p_piece: piece, p_enabled: form.get('enabled') === 'true' })
       return changed ? json({ ok: true }) : error('Peça indisponível.', 404)
+    }
+    if (action === 'variant') {
+      const piece = form.get('piece')
+      const variant = String(form.get('variant') || '').trim()
+      if (!uuid.test(piece) || (variant && !/^[\w-]{1,80}$/.test(variant))) return error('ID de variante inválido.')
+      const variants = await rpc('pilot_variants', { p_owner: id })
+      if (variant && Object.entries(variants).some(([key, value]) => key !== piece && value === variant)) {
+        return error('Essa variante já está vinculada a outra peça.', 409)
+      }
+      const saved = await rpc('pilot_set_variant', { p_owner: id, p_piece: piece, p_variant: variant || null })
+      return saved ? json({ ok: true }) : error('Peça indisponível.', 404)
     }
     if (action !== 'piece') return error('Ação inválida.')
     const photo = form.get('photo')

@@ -75,6 +75,7 @@ export default function Dashboard() {
         <section><strong>{data.completed}</strong><span>Provas concluídas</span></section>
         <section><strong>{data.reserved}</strong><span>Provas pendentes</span></section>
       </div>
+      <p><a href={"/instalar?loja=" + data.store.id}>Instalar botão na vitrine</a></p>
       <p>Recargas do piloto são registradas manualmente. Código da loja <code>{data.store.id}</code></p>
       <form onSubmit={event => act(event, 'piece')}>
         <h2>Adicionar peça</h2>
@@ -94,6 +95,13 @@ export default function Dashboard() {
             <form className="inline" onSubmit={event => act(event, 'toggle')}>
               <input type="hidden" name="piece" value={piece.id} /><input type="hidden" name="enabled" value={String(!piece.enabled)} />
               <button disabled={busy}>{piece.enabled ? 'Pausar' : 'Ativar'}</button>
+            </form>
+            <form className="variant-form" onSubmit={event => act(event, 'variant')}>
+              <input type="hidden" name="piece" value={piece.id} />
+              <label>ID da variante na vitrine
+                <input name="variant" key={data.variants?.[piece.id] || 'empty'} defaultValue={data.variants?.[piece.id] || ''} maxLength={80} />
+              </label>
+              <button className="secondary" disabled={busy}>Salvar vínculo</button>
             </form>
           </article>
         })}

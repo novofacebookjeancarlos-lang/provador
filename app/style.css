@@ -26,3 +26,7 @@ input:not([type=file]):not([type=checkbox]) { display: block; width: 100%; borde
 .piece-row small { display: block; color: #4e6253 }
 .product img { max-height: 15rem; object-fit: contain; width: auto; max-width: 100% }
 code { overflow-wrap: anywhere }
+.variant-form { flex-basis: 100%; grid-template-columns: minmax(0, 1fr) auto; align-items: end; padding: 0; margin: .25rem 0 }
+.photo-options { display: flex; flex-wrap: wrap; gap: .5rem }
+.photo-options button[aria-pressed=true] { outline: 2px solid #284736 }
+textarea { width: 100%; resize: vertical; border: 1px solid #bbc6b8; border-radius: .45rem; padding: .7rem; font: .85rem monospace }

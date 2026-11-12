@@ -6,6 +6,7 @@ export default function Page() {
   const [item, setItem] = useState(null)
   const [result, setResult] = useState('')
   const [error, setError] = useState('')
+  const [camera, setCamera] = useState(false)
   const [busy, setBusy] = useState(false)
   useEffect(() => {
     const id = new URLSearchParams(location.search).get('peca') ?? ''
@@ -51,7 +52,11 @@ export default function Page() {
     <header><h1>Veja como fica em você</h1></header>
     {item && <section className="product"><h2>{item.name}</h2>{item.image && <img src={item.image} alt={item.name} />}</section>}
     {(!piece || item) && <form onSubmit={submit}>
-      <label>Minha foto <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required /></label>
+      <div className="photo-options">
+        <button type="button" className="secondary" aria-pressed={!camera} onClick={() => setCamera(false)}>Escolher foto</button>
+        <button type="button" className="secondary" aria-pressed={camera} onClick={() => setCamera(true)}>Usar câmera</button>
+      </div>
+      <label>Minha foto <input key={String(camera)} type="file" name="photo" accept={camera ? 'image/*' : 'image/jpeg,image/png,image/webp'} capture={camera ? 'user' : undefined} required /></label>
       {!piece && <label>Foto da roupa <input type="file" name="garment" accept="image/jpeg,image/png,image/webp" required /></label>}
       <label className="consent"><input type="checkbox" name="consent" value="yes" required /> Autorizo o envio da foto à OpenAI para gerar esta simulação.</label>
       <button disabled={busy}>{busy ? 'Gerando sua prova…' : 'Experimentar em mim'}</button>

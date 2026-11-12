@@ -27,3 +27,15 @@ do painel no Auth do Supabase e o envio de e-mail de confirmação.
 A integração automática com a vitrine, checkout, fila durável e Cloudflare
 R2 seguem como próximos passos. O piloto usa Supabase Storage só para
 as fotos das peças. Limite a distribuição dos links durante o piloto.
+
+## Botão na Shopify
+
+No painel, associe cada peça ao ID da variante da vitrine e abra
+“Instalar botão na vitrine”. Cole o trecho num bloco Liquid personalizado
+em um tema compatível. O widget resolve a variante atual pelo formulário
+do produto ou pela URL. Teste o comportamento em cada tema antes de
+ativar para clientes. O cadastro e o mapeamento são manuais.
+
+O limite inicial é de 20 tentativas por loja em uma janela móvel de 24h,
+além do saldo pré-pago. O operador pode configurar daily_limit na tabela
+pilot_stores. Esse teto limita gasto e não substitui proteção antibot.
