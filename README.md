@@ -178,7 +178,7 @@ Preview. Rode o smoke test no Preview antes de qualquer promoção.
   Campos: `event`, `day` (YYYY-MM-DD), `reservedMicroUsd`, `limitMicroUsd`
   e `status: 503` no bloqueio. Falha de entrega gera log estruturado.
   Não há retentativa automática de webhook.
-- As 10 migrações criam o bucket privado `provador-produtos` na migração
+- As 11 migrações criam o bucket privado `provador-produtos` na migração
   `20261112000300_merchant.sql`. Após configurar o Preview, execute
   `npx supabase db push --linked --dry-run` antes do push.
 - Para a auditoria REST no Preview, configure `PREVIEW_PROJECT_REF`,
@@ -194,3 +194,21 @@ Preview. Rode o smoke test no Preview antes de qualquer promoção.
   https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation
 - Marco 1: varrer reservas órfãs e estornar quando a função morrer no meio
   da geração, mantendo a proteção contra reenvio ambíguo.
+
+### Ordem do primeiro deploy de produção
+
+1. Antes de promover, configure e confira todas as variáveis de Production,
+   em especial `TURNSTILE_SECRET_KEY` real, a site key correspondente e
+   `TRYON_BUDGET_ALERT_WEBHOOK_URL` HTTPS. A inicialização encerra com código
+   1 se o secret for de teste ou o webhook HTTPS estiver ausente.
+2. Valide a branch em Preview, incluindo auditoria de privilégios e smoke
+   test. Confirme o SHA do build e o plano de reversão.
+3. Antes de promover o build, aplique as migrações aprovadas ao banco de
+   produção. A rota nova depende das RPCs que elas criam.
+4. Promova somente após aprovação. Verifique inicialização, GETs públicos
+   e proteções do painel; confira os logs sem expor segredos.
+
+As funções de `postgres` têm o EXECUTE padrão revogado globalmente para
+os papéis de cliente, inclusive PUBLIC, e no schema public. Conceda acesso
+às futuras RPCs explicitamente. A revogação global também afeta novas
+funções criadas por postgres em outros schemas e não altera funções antigas.

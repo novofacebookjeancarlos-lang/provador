@@ -39,6 +39,17 @@ try {
   const migrations = (await readdir(new URL('../migrations/', import.meta.url))).filter(name => name.endsWith('.sql')).sort()
   for (const file of migrations) await pool.query(await read('../migrations/' + file))
   console.log('PASS: ' + migrations.length + ' migrations, ' + (await pool.query('show server_version')).rows[0].server_version)
+  await pool.query('begin; create function public.default_execute_probe() returns integer language sql as $$ select 1 $$;')
+  const { rows: [defaults] } = await pool.query(`
+    select has_function_privilege('anon','public.default_execute_probe()','execute') as anon,
+      has_function_privilege('authenticated','public.default_execute_probe()','execute') as authenticated,
+      exists(select from pg_proc p cross join lateral aclexplode(p.proacl) acl
+        where p.oid='public.default_execute_probe()'::regprocedure
+          and acl.grantee=0 and acl.privilege_type='EXECUTE') as public
+  `)
+  await pool.query('rollback')
+  assert.deepEqual(defaults, { anon: false, authenticated: false, public: false })
+  console.log('PASS: nova RPC de postgres sem EXECUTE para anon, authenticated ou PUBLIC')
   const access = await inventory(pool)
   const appFunctions = access.functions
   for (const fn of appFunctions) {
