@@ -1,0 +1,1 @@
+{"name":"provador","private":true,"scripts":{"dev":"next dev","build":"next build","start":"next start"},"dependencies":{"next":"15.5.15","react":"19.2.5","react-dom":"19.2.5","sharp":"0.34.5"}}
