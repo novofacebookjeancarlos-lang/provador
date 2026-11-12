@@ -5,7 +5,7 @@ header p { color: #4e6253 }
 h1 { font: 3.2rem Georgia, serif; margin: .4rem 0 2rem }
 form, section { display: grid; gap: 1.2rem; background: #fff; border-radius: 1rem; padding: 1.5rem; margin-block: 1rem }
 input[type=file] { display: block; margin-top: .75rem; max-width: 100% }
-.consent { display: flex; align-items: start; gap: .5rem }
+.consent { display: flex; align-items: flex-start; gap: .5rem }
 button { border: 0; border-radius: .5rem; padding: .85rem; background: #284736; color: #fff; font: inherit; cursor: pointer }
 button:disabled { opacity: .65 }
 img { width: 100%; height: auto; border-radius: .5rem }
