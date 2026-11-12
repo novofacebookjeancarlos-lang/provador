@@ -57,7 +57,7 @@ export default function Dashboard() {
 
   return <main className="dashboard">
     <nav><a href="/">Provador</a><span>Painel do lojista</span></nav>
-    <h1>{data?.store.name || 'Sua loja'}</h1>
+    <h1>{data?.store?.name || 'Sua loja'}</h1>
     {message && <p className="notice" role="status">{message}</p>}
     {data === undefined && <p>Carregando…</p>}
     {data === false && <form onSubmit={event => act(event, mode)}>
@@ -117,7 +117,7 @@ export default function Dashboard() {
         })}
       </section>
     </>}
-    {!!billing?.requests.length && <section>
+    {!!billing?.requests?.length && <section>
       <h2>{billing.operator ? 'Pedidos de recarga' : 'Histórico de recargas'}</h2>
       {billing.requests.map(request => <article className="piece-row" key={request.id}>
         <div><strong>{billing.operator && request.store + ' · '}{request.credits} provas</strong>
