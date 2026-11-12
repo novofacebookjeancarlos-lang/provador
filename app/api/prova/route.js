@@ -32,26 +32,38 @@ export async function POST(request) {
   const photo = form?.get('photo')
   const piece = form?.get('piece')
   const id = form?.get('requestId')
+  const garmentPhoto = form?.get('garment')
+  const demo = piece === ''
   const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i
-  if (!(photo instanceof File) || !uuid.test(piece) || !uuid.test(id) || form.get('consent') !== 'yes') {
+  if (!(photo instanceof File) || (!demo && !uuid.test(piece)) || (demo && !(garmentPhoto instanceof File)) || !uuid.test(id) || form.get('consent') !== 'yes') {
     return json('Dados da prova inválidos.', 400)
   }
-  if (!photo.size || photo.size > 4_000_000) return json('Escolha uma foto de até 4 MB.', 413)
+  if (!photo.size || (demo && !garmentPhoto.size) || photo.size + (demo ? garmentPhoto.size : 0) > 4_000_000) return json('As fotos juntas devem ter até 4 MB.', 413)
 
   let person
-  try { person = await normalize(Buffer.from(await photo.arrayBuffer())) }
+  let clothing
+  try {
+    person = await normalize(Buffer.from(await photo.arrayBuffer()))
+    if (demo) clothing = await normalize(Buffer.from(await garmentPhoto.arrayBuffer()))
+  }
   catch { return json('Não foi possível abrir essa foto.', 422) }
 
   try {
-    const garment = await rpc('reserve_pilot_tryon', { piece_id: piece, request_id: id })
-    if (!garment) return json('Peça indisponível ou limite de provas atingido.', 409)
-    const pieceUrl = new URL(garment)
-    if (pieceUrl.protocol !== 'https:' || pieceUrl.hostname !== process.env.GARMENT_ASSET_HOST) {
-      return json('Imagem da peça indisponível.', 503)
+    if (demo) {
+      if (!(await rpc('reserve_demo_tryon', { request_id: id }))) {
+        return json('O limite de provas de teste foi atingido.', 429)
+      }
+    } else {
+      const garment = await rpc('reserve_pilot_tryon', { piece_id: piece, request_id: id })
+      if (!garment) return json('Peça indisponível ou limite de provas atingido.', 409)
+      const pieceUrl = new URL(garment)
+      if (pieceUrl.protocol !== 'https:' || pieceUrl.hostname !== process.env.GARMENT_ASSET_HOST) {
+        return json('Imagem da peça indisponível.', 503)
+      }
+      const asset = await fetch(pieceUrl, { redirect: 'error', signal: AbortSignal.timeout(10_000) })
+      if (!asset.ok) return json('Imagem da peça indisponível.', 503)
+      clothing = await normalize(Buffer.from(await asset.arrayBuffer()))
     }
-    const asset = await fetch(pieceUrl, { redirect: 'error', signal: AbortSignal.timeout(10_000) })
-    if (!asset.ok) return json('Imagem da peça indisponível.', 503)
-    const clothing = await normalize(Buffer.from(await asset.arrayBuffer()))
     const images = new FormData()
     images.append('model', process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2')
     images.append('image[]', new Blob([person], { type: 'image/jpeg' }), 'pessoa.jpg')
