@@ -68,3 +68,94 @@ no domínio da plataforma. Cada loja usa seu próprio ID, catálogo e saldo.
 - `app/admin`: administração global. `app/testar` e `app/api/prova`: provador.
 - `app/instalar`, `app/api/vitrine` e `public/provador.js`: instalação na vitrine.
 - `supabase/migrations`: regras de dados, permissões e saldo.
+
+## Marco 0 — configuração e testes
+
+Use Node 22 ou superior. Para rodar o app, execute `npm ci`, copie
+`.env.example` para `.env.local`, configure um Supabase de desenvolvimento
+com as migrations e execute `npm run dev`. As variáveis abaixo aplicam-se
+a Local, Preview e Production, com valores próprios de cada ambiente.
+
+| Variável | Segredo | Valor |
+|---|---|---|
+| SUPABASE_URL | Não | URL do Supabase do ambiente |
+| SUPABASE_SERVICE_ROLE_KEY | Sim | Chave do servidor do mesmo Supabase |
+| OPENAI_API_KEY | Sim | Chave do projeto OpenAI do ambiente |
+| OPENAI_IMAGE_MODEL | Não | gpt-image-2 |
+| GARMENT_ASSET_HOST | Não | Opcional, apenas para imagens legadas externas |
+| NEXT_PUBLIC_TURNSTILE_SITE_KEY | Não | Site key do widget para os domínios do ambiente |
+| TURNSTILE_SECRET_KEY | Sim | Secret key do mesmo widget |
+| TRYON_IP_HASH_SECRET | Sim | Valor aleatório com pelo menos 32 caracteres, por ambiente |
+| TRYON_IP_PER_MINUTE | Não | 5 |
+| OPENAI_DAILY_BUDGET_MICRO_USD | Não | 5000000 (US$ 5,00) |
+| OPENAI_ASSUMED_COST_MICRO_USD | Não | 70000 (US$ 0,07) |
+| TRYON_BUDGET_ALERT_WEBHOOK_URL | Sim | Opcional. Endpoint HTTPS que aceita JSON. Sem ele, o alerta vai ao log estruturado |
+
+Gere o segredo de IP com `openssl rand -hex 32`. Em Vercel, o limite usa
+o IP fornecido pela plataforma. No desenvolvimento local todas as
+requisições entram no mesmo balde. As chaves de teste da Cloudflare
+servem apenas em Local/Preview. Production requer um widget real.
+
+O orçamento reseta à meia-noite em America/Sao_Paulo. O app reserva
+US$ 0,07 por chamada admitida e mantém a reserva mesmo com erro incerto.
+Com US$ 5,00, admite até 71 chamadas, reserva US$ 4,97 e bloqueia a
+72ª. O alerta cruza 80% na 58ª (US$ 4,06). Trata-se de um teto de
+reservas estimadas, separado do limite efetivo na conta OpenAI.
+A tabela de telemetria grava metadados e usage das tentativas admitidas.
+Se a função for encerrada antes da finalização, a linha pode ficar sem
+duração. O app não salva o conteúdo das fotos.
+
+Execute `npm run test:sql` para subir um Postgres local descartável,
+com diretório temporário e 32 conexões reais. O runner recusa URL externa.
+Execute `npm run test:prova` para simular Supabase, Turnstile e OpenAI.
+`npm run build` verifica a compilação.
+
+### Preparar Supabase novo de Preview
+
+Antes de rodar, confira no Dashboard que a referência é do projeto novo.
+Abra o terminal na raiz do repositório. Obtenha a string de conexão no
+Dashboard e informe a senha via prompt do psql ou .pgpass.
+
+```sh
+export PREVIEW_PROJECT_REF='PREENCHA_COM_O_REF_NOVO'
+export PREVIEW_DB_URL='postgresql://postgres@db.PREENCHA_COM_O_REF_NOVO.supabase.co:5432/postgres?sslmode=require'
+test "$PREVIEW_PROJECT_REF" != qislunvynxdrbclzqaoy &&
+  test "$PREVIEW_DB_URL" = "postgresql://postgres@db.$PREVIEW_PROJECT_REF.supabase.co:5432/postgres?sslmode=require" &&
+  test "$PREVIEW_PROJECT_REF" != PREENCHA_COM_O_REF_NOVO || exit 1
+npx supabase link --project-ref "$PREVIEW_PROJECT_REF"
+npx supabase db push --linked --dry-run
+npx supabase db push --linked
+psql "$PREVIEW_DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+begin;
+insert into public.pilot_stores(id,name,generation_budget) values
+ ('11111111-1111-4111-8111-111111111111','Loja Preview',2)
+ on conflict (id) do nothing;
+insert into public.pilot_pieces(id,store_id,name,garment_url,image_key,enabled,external_variant_id) values
+ ('22222222-2222-4222-8222-222222222222','11111111-1111-4111-8111-111111111111','Variante A','','preview/variante-a.jpg',true,'preview-a'),
+ ('33333333-3333-4333-8333-333333333333','11111111-1111-4111-8111-111111111111','Variante B','','preview/variante-b.jpg',true,'preview-b')
+ on conflict (id) do nothing;
+select 20 - count(*) as demo_tentativas_restantes from public.demo_tryon_attempts;
+commit;
+SQL
+```
+
+Envie dois JPEGs de teste pelo Dashboard do Storage, bucket privado
+`provador-produtos`, pasta `preview`, com os nomes acima. Em banco novo,
+a demo já tem 20 tentativas globais disponíveis. O seed da loja não
+precisa de conta Auth para testar o link público. Para testar o painel,
+cadastre e confirme uma conta de Preview e associe o UUID em owner_id.
+
+### Deploy com rastreabilidade
+
+Conecte o repositório em Vercel → projeto Provador → Settings → Git e
+configure `main` como branch de produção. Até a conexão funcionar, rode
+na branch com checkout limpo:
+
+```sh
+test -z "$(git status --porcelain)" || exit 1
+vercel deploy --meta "sourceCommitSha=$(git rev-parse HEAD)"
+```
+
+Confira o deployment em Deployments e o metadado pela API do deployment
+ou `vercel list --meta "sourceCommitSha=<SHA>"`. O comando acima cria
+Preview. Rode o smoke test no Preview antes de qualquer promoção.

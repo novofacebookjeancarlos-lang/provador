@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Turnstile from './Turnstile'
 
 export default function Page() {
   const [piece, setPiece] = useState('')
@@ -7,6 +8,8 @@ export default function Page() {
   const [result, setResult] = useState('')
   const [error, setError] = useState('')
   const [camera, setCamera] = useState(false)
+  const [token, setToken] = useState('')
+  const [challengeReset, setChallengeReset] = useState(0)
   const [busy, setBusy] = useState(false)
   useEffect(() => {
     const id = new URLSearchParams(location.search).get('peca') ?? ''
@@ -22,13 +25,14 @@ export default function Page() {
 
   async function submit(event) {
     event.preventDefault()
-    if (busy) return
+    if (busy || !token) return
     const form = new FormData(event.currentTarget)
     if (form.get('photo').size + (form.get('garment')?.size ?? 0) > 4_000_000) {
       setError('As fotos juntas devem ter até 4 MB.')
       return
     }
     form.set('piece', piece)
+    form.set('turnstileToken', token)
     form.set('requestId', crypto.randomUUID())
     setBusy(true)
     setResult('')
@@ -43,6 +47,8 @@ export default function Page() {
     } catch (failure) {
       setError(failure.message)
     } finally {
+      setToken('')
+      setChallengeReset(value => value + 1)
       setBusy(false)
     }
   }
@@ -59,7 +65,8 @@ export default function Page() {
       <label>Minha foto <input key={String(camera)} type="file" name="photo" accept={camera ? 'image/*' : 'image/jpeg,image/png,image/webp'} capture={camera ? 'user' : undefined} required /></label>
       {!piece && <label>Foto da roupa <input type="file" name="garment" accept="image/jpeg,image/png,image/webp" required /></label>}
       <label className="consent"><input type="checkbox" name="consent" value="yes" required /> Autorizo o envio da foto à OpenAI para gerar esta simulação.</label>
-      <button disabled={busy}>{busy ? 'Gerando sua prova…' : 'Experimentar em mim'}</button>
+      <Turnstile onToken={setToken} reset={challengeReset} />
+      <button disabled={busy || !token}>{busy ? 'Gerando sua prova…' : 'Experimentar em mim'}</button>
     </form>}
     {error && <p role="alert">{error}</p>}
     {item?.product && <p><a href={item.product}>Voltar para comprar</a></p>}
