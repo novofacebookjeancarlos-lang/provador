@@ -70,7 +70,7 @@ export async function POST(request) {
     images.append('image[]', new Blob([clothing], { type: 'image/jpeg' }), 'peca.jpg')
     images.append('prompt', 'Use a primeira foto como base. Troque somente a roupa pela peça exata da segunda foto. Preserve rosto, pose, fundo, corte, cor, estampas e logos. Gere uma simulação fotográfica realista.')
     images.append('size', '1024x1536')
-    images.append('quality', 'medium')
+    images.append('quality', demo ? 'low' : 'medium')
     const generation = await fetch('https://api.openai.com/v1/images/edits', {
       method: 'POST', headers: { Authorization: 'Bearer ' + process.env.OPENAI_API_KEY },
       body: images, signal: AbortSignal.timeout(150_000),
