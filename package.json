@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start",
     "test:sql": "node supabase/tests/run.mjs",
-    "test:prova": "node --test supabase/tests/prova.test.mjs"
+    "test:prova": "node --test supabase/tests/prova.test.mjs supabase/tests/guard.test.mjs"
   },
   "dependencies": {
     "next": "15.5.15",

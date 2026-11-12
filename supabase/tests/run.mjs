@@ -5,6 +5,7 @@ import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import pg from 'pg'
+import { inventory } from './privileges.mjs'
 
 const external = ['DATABASE_URL', 'DIRECT_URL', 'SUPABASE_DB_URL', 'POSTGRES_URL', 'PGHOST', 'PGSERVICE']
 if (process.argv.length > 2 || external.some(key => process.env[key])) {
@@ -38,6 +39,16 @@ try {
   const migrations = (await readdir(new URL('../migrations/', import.meta.url))).filter(name => name.endsWith('.sql')).sort()
   for (const file of migrations) await pool.query(await read('../migrations/' + file))
   console.log('PASS: ' + migrations.length + ' migrations, ' + (await pool.query('show server_version')).rows[0].server_version)
+  const access = await inventory(pool)
+  const appFunctions = access.functions
+  for (const fn of appFunctions) {
+    assert.equal(fn.anon || fn.authenticated, false)
+    console.log(fn.signature + ' ' + (fn.definer ? 'DEFINER' : 'INVOKER') + ' EXECUTE ' + fn.execute.join(', '))
+  }
+  assert.equal(appFunctions.length, 20)
+  assert.ok(access.tables.every(table => table.rls && !table.anon.length && !table.authenticated.length))
+  assert.equal((await pool.query("select public from storage.buckets where id='provador-produtos'")).rows[0].public, false)
+  console.log('PASS: ACL das 20 RPCs do app, RLS e grants das tabelas, bucket privado')
   await pool.query(await read('./invariants.sql'))
   console.log('PASS: reserva, estorno, duplicidade, isolamento e crédito único')
 
@@ -55,8 +66,9 @@ try {
       [randomUUID(), piece.id])).rows[0].result))
   assert.equal(budget.filter(row => row.status === 'allowed').length, 7)
   assert.equal(budget.filter(row => row.status === 'budget').length, 25)
-  assert.equal(budget.filter(row => row.alert).length, 1)
-  console.log('PASS: teto global concorrente, 7 autorizações, 25 bloqueios, 1 alerta')
+  assert.equal(budget.filter(row => row.status === 'allowed' && row.alert).length, 1)
+  assert.equal(budget.filter(row => row.status === 'budget' && row.alert).length, 1)
+  console.log('PASS: teto global concorrente, 7 autorizações, 25 bloqueios, 1 alerta de 80% e 1 alerta de bloqueio')
   const rates = await Promise.all(Array.from({ length: 32 }, () =>
     pool.query('select generation_rate($1,5) as allowed', ['a'.repeat(64)])))
   assert.equal(rates.filter(result => result.rows[0].allowed).length, 5)

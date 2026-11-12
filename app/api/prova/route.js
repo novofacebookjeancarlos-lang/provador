@@ -83,7 +83,9 @@ export async function POST(request) {
     })
     switch (reservation?.status) {
       case 'allowed': break
-      case 'budget': return json('O provador atingiu o limite de hoje. Tente novamente amanhã.', 503)
+      case 'budget':
+        await sendBudgetAlert(reservation, limits.daily)
+        return json('O provador atingiu o limite de hoje. Tente novamente amanhã.', 503)
       case 'demo': return json('O limite de provas de teste foi atingido.', 429)
       case 'store': return json('Peça indisponível ou loja sem créditos.', 409)
       case 'duplicate': return json('Esta prova já foi solicitada.', 409)

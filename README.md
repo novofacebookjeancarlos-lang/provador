@@ -89,7 +89,7 @@ a Local, Preview e Production, com valores próprios de cada ambiente.
 | TRYON_IP_PER_MINUTE | Não | 5 |
 | OPENAI_DAILY_BUDGET_MICRO_USD | Não | 5000000 (US$ 5,00) |
 | OPENAI_ASSUMED_COST_MICRO_USD | Não | 70000 (US$ 0,07) |
-| TRYON_BUDGET_ALERT_WEBHOOK_URL | Sim | Opcional. Endpoint HTTPS que aceita JSON. Sem ele, o alerta vai ao log estruturado |
+| TRYON_BUDGET_ALERT_WEBHOOK_URL | Sim | Obrigatório em Production. Opcional em Local e Preview. Endpoint HTTPS que aceita JSON |
 
 Gere o segredo de IP com `openssl rand -hex 32`. Em Vercel, o limite usa
 o IP fornecido pela plataforma. No desenvolvimento local todas as
@@ -159,3 +159,38 @@ vercel deploy --meta "sourceCommitSha=$(git rev-parse HEAD)"
 Confira o deployment em Deployments e o metadado pela API do deployment
 ou `vercel list --meta "sourceCommitSha=<SHA>"`. O comando acima cria
 Preview. Rode o smoke test no Preview antes de qualquer promoção.
+
+### Fechamento do Marco 0
+
+- Siteverify com o secret oficial `1x…AA` retorna sucesso, `hostname=example.com`,
+  `challenge_ts` e `error-codes=[]`, sem `action` nem `cdata`. O secret
+  `2x…AA` retorna `invalid-input-response`, e o `3x…AA` retorna
+  `timeout-or-duplicate`, ambos com `success=false`. Não dependa de
+  metadados adicionais nos retornos negativos. Só os três valores oficiais
+  completos dispensam hostname/ação, fora de Production.
+- O IP vem de `x-vercel-forwarded-for` em Vercel, conforme
+  https://vercel.com/docs/headers/request-headers#x-vercel-forwarded-for.
+  A rota ignora `x-forwarded-for`; falta confirmar o comportamento na
+  borda real se houver outro proxy na frente da Vercel.
+- Production exige secret Turnstile real e `TRYON_BUDGET_ALERT_WEBHOOK_URL`
+  HTTPS na inicialização. O webhook recebe POST JSON uma vez por dia por
+  evento: `openai_budget_80_percent` ou `openai_budget_100_percent_blocked`.
+  Campos: `event`, `day` (YYYY-MM-DD), `reservedMicroUsd`, `limitMicroUsd`
+  e `status: 503` no bloqueio. Falha de entrega gera log estruturado.
+  Não há retentativa automática de webhook.
+- As 10 migrações criam o bucket privado `provador-produtos` na migração
+  `20261112000300_merchant.sql`. Após configurar o Preview, execute
+  `npx supabase db push --linked --dry-run` antes do push.
+- Para a auditoria REST no Preview, configure `PREVIEW_PROJECT_REF`,
+  `PREVIEW_SUPABASE_URL`, `PREVIEW_DB_URL` (conexão direta com
+  `sslmode=verify-full`), `PREVIEW_SUPABASE_ANON_KEY` (chave JWT anon
+  legada) e `PREVIEW_USER_JWT` (access token de conta não operadora).
+  Use `node supabase/tests/privileges.mjs`. O script recusa produção,
+  lista modo e EXECUTE das RPCs e verifica a negação pela API. Uma RPC
+  desconhecida fica como falha até que tenha uma sonda segura explícita.
+  O inventário e as verificações locais de grants rodam em `npm run test:sql`.
+- Para smoke test em Preview protegido, forneça o segredo de automação
+  no header `x-vercel-protection-bypass` (sem URL, logs ou Git).
+  https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation
+- Marco 1: varrer reservas órfãs e estornar quando a função morrer no meio
+  da geração, mantendo a proteção contra reenvio ambíguo.
