@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 
 export default function Dashboard() {
   const [data, setData] = useState(undefined)
+  const [billing, setBilling] = useState(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [mode, setMode] = useState('login')
@@ -10,10 +11,13 @@ export default function Dashboard() {
   async function refresh() {
     try {
       const response = await fetch('/api/loja')
-      if (response.status === 401) return setData(false)
+      if (response.status === 401) { setBilling(null); return setData(false) }
       if (!response.ok) throw new Error('Painel indisponível.')
-      setData((await response.json()).dashboard)
+      const payload = await response.json()
+      setData(payload.dashboard)
+      setBilling(payload.billing)
     } catch (error) {
+      setBilling(null)
       setData(false)
       setMessage(error.message)
     }
@@ -26,7 +30,7 @@ export default function Dashboard() {
     setBusy(true)
     setMessage('')
     const element = event.currentTarget
-    const form = new FormData(element)
+    const form = new FormData(element, event.nativeEvent.submitter || undefined)
     form.set('action', action)
     try {
       const response = await fetch('/api/loja', { method: 'POST', body: form })
@@ -76,7 +80,13 @@ export default function Dashboard() {
         <section><strong>{data.reserved}</strong><span>Provas pendentes</span></section>
       </div>
       <p><a href={"/instalar?loja=" + data.store.id}>Instalar botão na vitrine</a></p>
-      <p>Recargas do piloto são registradas manualmente. Código da loja <code>{data.store.id}</code></p>
+      <form onSubmit={event => act(event, 'recharge')}>
+        <h2>Solicitar créditos</h2>
+        <p>O saldo entra depois que o operador confirmar o pagamento.</p>
+        <label>Pacote<select name="credits"><option value="30">30 provas · R$ 49</option><option value="100">100 provas · R$ 129</option></select></label>
+        <button disabled={busy}>Solicitar recarga</button>
+      </form>
+      <p>Código da loja <code>{data.store.id}</code></p>
       <form onSubmit={event => act(event, 'piece')}>
         <h2>Adicionar peça</h2>
         <label>Nome da peça ou cor<input name="name" maxLength={120} required /></label>
@@ -107,6 +117,21 @@ export default function Dashboard() {
         })}
       </section>
     </>}
+    {!!billing?.requests.length && <section>
+      <h2>{billing.operator ? 'Pedidos de recarga' : 'Histórico de recargas'}</h2>
+      {billing.requests.map(request => <article className="piece-row" key={request.id}>
+        <div><strong>{billing.operator && request.store + ' · '}{request.credits} provas</strong>
+          <small>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(request.amount_cents / 100)} · {
+            { pending: 'Aguardando confirmação', confirmed: 'Confirmado', cancelled: 'Cancelado' }[request.status]
+          }</small></div>
+        {billing.operator && request.status === 'pending' && <form className="variant-form" onSubmit={event => act(event, 'review-recharge')}>
+          <input type="hidden" name="request" value={request.id} />
+          <label>Referência do pagamento<input name="reference" maxLength={120} /></label>
+          <button name="decision" value="confirm" disabled={busy}>Confirmar pagamento</button>
+          <button name="decision" value="cancel" type="submit" className="secondary" disabled={busy}>Cancelar pedido</button>
+        </form>}
+      </article>)}
+    </section>}
     {data !== false && data !== undefined && <form className="inline" onSubmit={event => act(event, 'logout')}><button className="secondary" disabled={busy}>Sair</button></form>}
   </main>
 }

@@ -30,3 +30,4 @@ code { overflow-wrap: anywhere }
 .photo-options { display: flex; flex-wrap: wrap; gap: .5rem }
 .photo-options button[aria-pressed=true] { outline: 2px solid #284736 }
 textarea { width: 100%; resize: vertical; border: 1px solid #bbc6b8; border-radius: .45rem; padding: .7rem; font: .85rem monospace }
+select { display: block; width: 100%; margin-top: .35rem; padding: .7rem; border: 1px solid #bbc6b8; border-radius: .45rem; background: #fff; font: inherit }

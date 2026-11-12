@@ -39,3 +39,12 @@ ativar para clientes. O cadastro e o mapeamento são manuais.
 O limite inicial é de 20 tentativas por loja em uma janela móvel de 24h,
 além do saldo pré-pago. O operador pode configurar daily_limit na tabela
 pilot_stores. Esse teto limita gasto e não substitui proteção antibot.
+
+## Recargas no painel
+
+A loja pode solicitar 30 ou 100 provas e acompanhar a confirmação.
+O pagamento ocorre fora do app. Para habilitar a operação no painel,
+insira em public.pilot_operators o UUID da conta confirmada do operador
+(em user_id), usando o SQL Editor. Entre com essa conta, localize o pedido
+pendente e registre a referência única do pagamento recebido. A confirmação
+credita o saldo na mesma transação. A referência não pode ser reutilizada.

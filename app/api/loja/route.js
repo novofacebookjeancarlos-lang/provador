@@ -21,11 +21,11 @@ export async function GET() {
   try {
     const id = await owner()
     if (!id) return error('Entre na sua conta.', 401)
-    const [dashboard, variants] = await Promise.all([
-      rpc('pilot_dashboard', { p_owner: id }), rpc('pilot_variants', { p_owner: id }),
+    const [dashboard, variants, billing] = await Promise.all([
+      rpc('pilot_dashboard', { p_owner: id }), rpc('pilot_variants', { p_owner: id }), rpc('pilot_recharges', { p_actor: id }),
     ])
     if (dashboard) dashboard.variants = variants
-    return json({ dashboard })
+    return json({ dashboard, billing })
   } catch {
     return error('Painel indisponível. Tente novamente.', 503)
   }
@@ -57,6 +57,23 @@ export async function POST(request) {
     const id = await owner()
     if (!id) return error('Entre na sua conta.', 401)
     const name = String(form.get('name') || '').trim()
+    if (action === 'recharge') {
+      const credits = Number(form.get('credits'))
+      if (![30, 100].includes(credits)) return error('Escolha um pacote.')
+      const requestId = await rpc('pilot_request_recharge', { p_owner: id, p_credits: credits })
+      return requestId ? json({ message: 'Pedido de recarga registrado.' }, 201) : error('Já existe um pedido pendente ou falta cadastrar sua loja.', 409)
+    }
+    if (action === 'review-recharge') {
+      const requestId = form.get('request')
+      const decision = form.get('decision')
+      const reference = String(form.get('reference') || '').trim()
+      if (!uuid.test(requestId) || !['confirm', 'cancel'].includes(decision)) return error('Pedido inválido.')
+      if (decision === 'confirm' && (reference.length < 4 || reference.length > 120)) return error('Informe a referência do pagamento confirmado.')
+      const done = await rpc('pilot_review_recharge', {
+        p_actor: id, p_request: requestId, p_approve: decision === 'confirm', p_reference: reference || null,
+      })
+      return done ? json({ message: 'Pedido atualizado.' }) : error('Pedido indisponível, referência já usada ou acesso insuficiente.', 409)
+    }
     if (action === 'store') {
       if (!name || name.length > 80) return error('Informe o nome da loja.')
       return json({ dashboard: await rpc('pilot_dashboard', { p_owner: id, p_name: name }) })
