@@ -56,7 +56,7 @@ export default function Dashboard() {
   }
 
   return <main className="dashboard">
-    <nav><a href="/">Provador</a><span>Painel do lojista</span></nav>
+    <nav><a href="/">Provador</a><span>Painel do lojista</span>{billing?.operator && <a href="/admin">Administração</a>}</nav>
     <h1>{data?.store?.name || 'Sua loja'}</h1>
     {message && <p className="notice" role="status">{message}</p>}
     {data === undefined && <p>Carregando…</p>}
@@ -98,7 +98,7 @@ export default function Dashboard() {
         <h2>Peças cadastradas</h2>
         {!data.pieces.length && <p>Cadastre a primeira peça para gerar o link.</p>}
         {data.pieces.map(piece => {
-          const path = '/?peca=' + piece.id
+          const path = '/testar?peca=' + piece.id
           return <article className="piece-row" key={piece.id}>
             <div><strong>{piece.name}</strong><small>{piece.enabled ? 'Ativa' : 'Pausada'}</small></div>
             {piece.enabled && <><a href={path}>Abrir provador</a><button type="button" className="secondary" onClick={() => copy(path)}>Copiar link</button></>}

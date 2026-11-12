@@ -31,3 +31,38 @@ code { overflow-wrap: anywhere }
 .photo-options button[aria-pressed=true] { outline: 2px solid #284736 }
 textarea { width: 100%; resize: vertical; border: 1px solid #bbc6b8; border-radius: .45rem; padding: .7rem; font: .85rem monospace }
 select { display: block; width: 100%; margin-top: .35rem; padding: .7rem; border: 1px solid #bbc6b8; border-radius: .45rem; background: #fff; font: inherit }
+.landing { width: min(92%, 70rem) }
+.hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 2.5rem; align-items: center; padding: clamp(1rem, 5vw, 4rem) 0 }
+.hero p { max-width: 36rem; font-size: 1.18rem; line-height: 1.6 }
+.hero-preview { border-radius: 1rem; padding: 2rem; background: #284736; color: white }
+.hero-preview li { margin-top: .8rem }
+.actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap }
+.cta { background: #284736; color: white; padding: .85rem 1rem; border-radius: .5rem; text-decoration: none }
+.landing-section { padding: 1.5rem; margin-top: 1rem }
+.landing-section .metrics section { background: #eef2ec }
+.section-title { margin-top: 2rem }
+.landing { width: min(92%, 74rem); margin-top: 1.3rem; color: #10251c }
+body:has(.landing) { background: #f9fbf9 }
+.site-nav { align-items: center; border-bottom: 1px solid #dce9e0; padding-bottom: 1rem }
+.site-nav div { display: flex; flex-wrap: wrap; gap: clamp(.7rem, 3vw, 2rem); align-items: center }
+.site-nav a, footer a { text-decoration: none }
+.wordmark { font-size: 1.15rem; font-weight: 800; letter-spacing: -.04em }
+.wordmark span { color: #08784f; margin-left: .22rem }
+.hero { background: radial-gradient(ellipse at right, #daf1e4, transparent 65%); border-radius: 1.4rem; padding: clamp(1rem, 4vw, 3.8rem); margin-top: 2rem }
+.hero h1 { font-family: Arial, sans-serif; font-weight: 800; letter-spacing: -.07em; font-size: clamp(2.7rem, 7vw, 5.2rem); margin: 0 }
+.hero em { font-style: normal; color: #08784f }
+.hero-preview { position: relative; margin: 0; padding: 0; overflow: hidden; background: #bcd7c3; box-shadow: 0 18px 48px #183c2422 }
+.hero-preview img { display: block; aspect-ratio: 5/5.5; object-fit: cover; object-position: center 35% }
+.hero-preview figcaption { position: absolute; left: .8rem; right: .8rem; bottom: .8rem; color: #18372a; background: #fffffff5; border-radius: .75rem; padding: .8rem 1rem; display: grid; gap: .2rem }
+.hero-preview figcaption > span { font-size: .8rem; color: #416653 }
+.hero-preview figcaption a { width: fit-content; margin-top: .3rem; font-weight: 700 }
+.landing .cta { background: #08784f }
+.landing-section { padding: clamp(1.2rem, 4vw, 2.8rem); border: 1px solid #e0ebe4; border-radius: 1.25rem; margin-top: 1.6rem }
+.landing-section h2 { font-size: clamp(1.6rem, 3vw, 2.25rem); letter-spacing: -.045em }
+.steps { display: grid; grid-template-columns: repeat(auto-fit,minmax(12rem,1fr)); gap: 1rem }
+.steps article { background: #f4f8f5; border: 1px solid #e0ebe4; border-radius: .8rem; padding: 1rem }
+.steps h3 { margin: 0 0 .5rem }
+.steps p, .landing-section p { line-height: 1.55 }
+.integration { background: #e8f5ec }
+.final-cta { background: #112f22; color: white; justify-items: start }
+footer { display: flex; justify-content: space-between; gap: 1rem; padding: 1.5rem 0 }

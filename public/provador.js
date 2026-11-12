@@ -17,6 +17,7 @@
   root.append(status)
 
   function selectedVariant() {
+    if (root.dataset.variante) return root.dataset.variante
     const form = root.closest('form') || document.querySelector('form[action*="/cart/add"]')
     return form?.querySelector('[name="id"]')?.value ||
       new URL(location.href).searchParams.get('variant') || script.dataset.variante

@@ -17,10 +17,14 @@ async function owner() {
   return user.email_confirmed_at && uuid.test(user.id) ? user.id : null
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
     const id = await owner()
     if (!id) return error('Entre na sua conta.', 401)
+    if (new URL(request.url).searchParams.has('admin')) {
+      const overview = await rpc('pilot_admin_overview', { p_actor: id })
+      return overview ? json({ overview }) : error('Acesso administrativo restrito.', 403)
+    }
     const [dashboard, variants, billing] = await Promise.all([
       rpc('pilot_dashboard', { p_owner: id }), rpc('pilot_variants', { p_owner: id }), rpc('pilot_recharges', { p_actor: id }),
     ])
@@ -57,6 +61,13 @@ export async function POST(request) {
     const id = await owner()
     if (!id) return error('Entre na sua conta.', 401)
     const name = String(form.get('name') || '').trim()
+    if (action === 'admin-store') {
+      const store = form.get('store')
+      const limit = Number(form.get('limit'))
+      if (!uuid.test(store) || !Number.isInteger(limit) || limit < 1 || limit > 1000) return error('Loja ou limite inválido.')
+      const saved = await rpc('pilot_admin_store', { p_actor: id, p_store: store, p_limit: limit, p_suspended: form.get('suspended') === 'on' })
+      return saved ? json({ message: 'Loja atualizada.' }) : error('Acesso administrativo restrito ou loja indisponível.', 403)
+    }
     if (action === 'recharge') {
       const credits = Number(form.get('credits'))
       if (![30, 100].includes(credits)) return error('Escolha um pacote.')

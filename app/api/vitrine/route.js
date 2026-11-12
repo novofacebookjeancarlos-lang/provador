@@ -15,7 +15,7 @@ export async function GET(request) {
   try {
     const id = await rpc('pilot_variant', { p_store: store, p_variant: variant })
     if (!id) return Response.json({ error: 'Variante indisponível.' }, { status: 404, headers })
-    return Response.json({ path: '/?peca=' + id }, { headers })
+    return Response.json({ path: '/testar?peca=' + id }, { headers })
   } catch {
     return Response.json({ error: 'Provador temporariamente indisponível.' }, { status: 503, headers })
   }

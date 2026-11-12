@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 export default function Install() {
   const [store, setStore] = useState('')
   const [origin, setOrigin] = useState('')
+  const [platform, setPlatform] = useState('shopify')
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -12,17 +13,26 @@ export default function Install() {
     setOrigin(location.origin)
   }, [])
 
-  const snippet = '<div id="provador-vitrine"></div>\n<script src="' + origin +
-    '/provador.js" data-loja="' + store +
-    '" data-variante="{{ product.selected_or_first_available_variant.id }}" defer></script>'
+  const snippet = (platform === 'shopify'
+    ? '<div id="provador-vitrine"></div>\n'
+    : '<div id="provador-vitrine" data-variante="ID_DA_VARIANTE"></div>\n') +
+    '<script src="' + origin + '/provador.js" data-loja="' + store + '"' +
+    (platform === 'shopify' ? ' data-variante="{{ product.selected_or_first_available_variant.id }}"' : '') +
+    ' defer></script>'
 
   return <main>
     <nav><a href="/painel">Painel do lojista</a></nav>
-    <h1>Instalar na Shopify</h1>
+    <h1>Instalar na vitrine</h1>
+    <div className="actions">
+      <button aria-pressed={platform === 'shopify'} onClick={() => { setPlatform('shopify'); setCopied(false) }}>Shopify</button>
+      <button aria-pressed={platform === 'custom'} onClick={() => { setPlatform('custom'); setCopied(false) }}>Loja com código próprio</button>
+    </div>
     <section>
       <ol>
         <li>Cadastre a foto de cada variante que vai participar e informe o ID no painel.</li>
-        <li>No editor do tema, abra a página de produto e adicione um bloco Liquid personalizado.</li>
+        {platform === 'shopify'
+          ? <li>Adicione um bloco Liquid personalizado à página de produto.</li>
+          : <li>Cole o trecho perto do botão de compra. No seu código, atualize o atributo <code>data-variante</code> do elemento quando a seleção mudar.</li>}
         <li>Cole o trecho abaixo, salve e teste o botão em duas variantes cadastradas.</li>
       </ol>
       {store && origin ? <>

@@ -6,9 +6,9 @@ são transitórios e retornam na própria requisição.
 
 ## Piloto
 
-- / abre o teste com duas fotos e teto de 20 tentativas.
+- /testar abre o teste com duas fotos e teto de 20 tentativas.
 - /painel permite criar conta, confirmar e-mail, cadastrar loja, cadastrar
-  uma foto por peça ou variante e copiar o link /?peca=UUID.
+  uma foto por peça ou variante e copiar o link /testar?peca=UUID.
 - O link público mostra a peça e pede só a foto da visitante.
 - Pausar uma peça desativa seu link. O retorno à compra usa o link da loja.
 - Cada tentativa em loja reserva um crédito atomicamente. Falha confirmada
@@ -48,3 +48,14 @@ insira em public.pilot_operators o UUID da conta confirmada do operador
 (em user_id), usando o SQL Editor. Entre com essa conta, localize o pedido
 pendente e registre a referência única do pagamento recebido. A confirmação
 credita o saldo na mesma transação. A referência não pode ser reutilizada.
+
+## Administração e lojas próprias
+
+A página inicial fica em /, a demonstração em /testar e o painel global
+em /admin. O painel global verifica pilot_operators no servidor e no banco.
+Ele permite consultar saldo, suspender o provador e ajustar o limite diário.
+
+Em loja própria, use o código gerado em “Instalar botão na vitrine”.
+Associe os IDs das variantes no painel e atualize o atributo data-variante
+do elemento provador-vitrine ao trocar a seleção. O widget abre o provador
+no domínio da plataforma. Cada loja usa seu próprio ID, catálogo e saldo.

@@ -1,68 +1,25 @@
-'use client'
-import { useEffect, useState } from 'react'
+import { redirect } from 'next/navigation'
 
-export default function Page() {
-  const [piece, setPiece] = useState('')
-  const [item, setItem] = useState(null)
-  const [result, setResult] = useState('')
-  const [error, setError] = useState('')
-  const [camera, setCamera] = useState(false)
-  const [busy, setBusy] = useState(false)
-  useEffect(() => {
-    const id = new URLSearchParams(location.search).get('peca') ?? ''
-    setPiece(id)
-    if (id) fetch('/api/peca?id=' + encodeURIComponent(id))
-      .then(async response => {
-        if (!response.ok) throw new Error('Peça indisponível.')
-        setItem(await response.json())
-      })
-      .catch(error => setError(error.message))
-  }, [])
-  useEffect(() => () => { if (result) URL.revokeObjectURL(result) }, [result])
+export default async function Home({ searchParams }) {
+  const query = await searchParams
+  if (typeof query.peca === 'string' && query.peca) redirect('/testar?peca=' + encodeURIComponent(query.peca))
 
-  async function submit(event) {
-    event.preventDefault()
-    if (busy) return
-    const form = new FormData(event.currentTarget)
-    if (form.get('photo').size + (form.get('garment')?.size ?? 0) > 4_000_000) {
-      setError('As fotos juntas devem ter até 4 MB.')
-      return
-    }
-    form.set('piece', piece)
-    form.set('requestId', crypto.randomUUID())
-    setBusy(true)
-    setResult('')
-    setError('')
-    try {
-      const response = await fetch('/api/prova', { method: 'POST', body: form })
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
-        throw new Error(data.error || 'Não foi possível gerar a prova.')
-      }
-      setResult(URL.createObjectURL(await response.blob()))
-    } catch (failure) {
-      setError(failure.message)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return <main>
-    <nav><span>{item?.store || 'Provador virtual'}</span>{!piece && <a href="/painel">Painel do lojista</a>}</nav>
-    <header><h1>Veja como fica em você</h1></header>
-    {item && <section className="product"><h2>{item.name}</h2>{item.image && <img src={item.image} alt={item.name} />}</section>}
-    {(!piece || item) && <form onSubmit={submit}>
-      <div className="photo-options">
-        <button type="button" className="secondary" aria-pressed={!camera} onClick={() => setCamera(false)}>Escolher foto</button>
-        <button type="button" className="secondary" aria-pressed={camera} onClick={() => setCamera(true)}>Usar câmera</button>
-      </div>
-      <label>Minha foto <input key={String(camera)} type="file" name="photo" accept={camera ? 'image/*' : 'image/jpeg,image/png,image/webp'} capture={camera ? 'user' : undefined} required /></label>
-      {!piece && <label>Foto da roupa <input type="file" name="garment" accept="image/jpeg,image/png,image/webp" required /></label>}
-      <label className="consent"><input type="checkbox" name="consent" value="yes" required /> Autorizo o envio da foto à OpenAI para gerar esta simulação.</label>
-      <button disabled={busy}>{busy ? 'Gerando sua prova…' : 'Experimentar em mim'}</button>
-    </form>}
-    {error && <p role="alert">{error}</p>}
-    {item?.product && <p><a href={item.product}>Voltar para comprar</a></p>}
-    {result && <section><h2>Sua prova</h2><p>Simulação visual da peça.</p><img src={result} alt="Simulação de você com a peça" /><a href={result} download="minha-prova.jpg">Baixar imagem</a><button onClick={() => setResult('')}>Limpar resultado</button></section>}
+  return <main className="landing">
+    <nav className="site-nav"><a className="wordmark" href="/">Provador<span>Virtual</span></a><div><a href="#como-funciona">Como funciona</a><a href="#planos">Créditos</a><a href="/painel">Área do lojista</a></div></nav>
+    <header className="hero">
+      <div><h1>Da vitrine para<br /> <em>o seu espelho.</em></h1>
+      <p>Adicione um provador com IA à sua loja. A cliente escolhe a peça, tira uma foto e recebe uma prévia usando a roupa.</p>
+      <div className="actions"><a className="cta" href="/testar">Testar com duas fotos</a><a href="/painel">Criar conta de lojista</a></div></div>
+      <figure className="hero-preview"><img src="/editorial.webp" alt="Modelo vestindo um colete verde em estúdio" fetchPriority="high" /><figcaption><span>Prévia do provador</span><strong>Colete de linho</strong><a href="/testar">Experimentar em mim <span aria-hidden="true">↗</span></a></figcaption></figure>
+    </header>
+    <section id="como-funciona" className="how landing-section"><h2>Do clique à prova</h2><div className="steps">
+      <article><h3>Escolha a peça</h3><p>O botão abre a variante selecionada na vitrine.</p></article>
+      <article><h3>Tire uma foto</h3><p>A cliente usa a câmera ou escolhe uma imagem da galeria.</p></article>
+      <article><h3>Veja o resultado</h3><p>A simulação aparece na tela com um link de volta para a peça.</p></article>
+    </div></section>
+    <section className="landing-section integration"><h2>Instale na sua vitrine</h2><p>Use um bloco Liquid na Shopify ou um script em uma loja própria. O painel permite vincular cada variante à foto correspondente e pausar peças a qualquer momento.</p></section>
+    <section id="planos" className="landing-section"><h2>Créditos pré-pagos</h2><p>Solicite recargas no painel. Os créditos entram após a confirmação do pagamento.</p><div className="metrics"><section><strong>R$ 49</strong><span>30 provas</span></section><section><strong>R$ 129</strong><span>100 provas</span></section></div></section>
+    <section className="landing-section final-cta"><h2>Experimente com uma peça da sua loja</h2><a className="cta" href="/testar">Abrir o provador</a></section>
+    <footer><strong>Provador Virtual</strong><a href="/painel">Área do lojista</a></footer>
   </main>
 }
