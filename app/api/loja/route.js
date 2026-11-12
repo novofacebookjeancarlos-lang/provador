@@ -61,6 +61,17 @@ export async function POST(request) {
     const id = await owner()
     if (!id) return error('Entre na sua conta.', 401)
     const name = String(form.get('name') || '').trim()
+    if (action === 'admin-credit') {
+      const store = form.get('store')
+      const amount = Number(form.get('amount'))
+      const reference = String(form.get('reference') || '').trim()
+      if (!uuid.test(store) || !Number.isInteger(amount) || amount < 1 || amount > 10000 ||
+          reference.length < 4 || reference.length > 120) return error('Confira a quantidade e a referência.')
+      const credited = await rpc('pilot_admin_credit', {
+        p_actor: id, p_store: store, p_amount: amount, p_reference: reference,
+      })
+      return credited ? json({ message: 'Créditos liberados.' }) : error('Referência já usada, loja indisponível ou acesso restrito.', 409)
+    }
     if (action === 'admin-store') {
       const store = form.get('store')
       const limit = Number(form.get('limit'))

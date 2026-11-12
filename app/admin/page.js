@@ -20,15 +20,17 @@ export default function Admin() {
   }
   useEffect(() => { refresh() }, [])
 
-  async function save(event) {
+  async function save(event, action) {
     event.preventDefault()
-    const form = new FormData(event.currentTarget)
-    form.set('action', 'admin-store')
+    const element = event.currentTarget
+    const form = new FormData(element)
+    form.set('action', action)
     setBusy(true)
     try {
       const response = await fetch('/api/loja', { method: 'POST', body: form })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error)
+      if (action === 'admin-credit') element.reset()
       await refresh()
       setNotice(payload.message)
     } catch (error) {
@@ -50,13 +52,22 @@ export default function Admin() {
       </div>
       <h2 className="section-title">Lojas</h2>
       {!overview.stores.length && <p>Nenhuma loja cadastrada.</p>}
-      {overview.stores.map(store => <form key={store.id} onSubmit={save}>
+      {overview.stores.map(store => <article key={store.id}>
+      <form onSubmit={event => save(event, 'admin-store')}>
         <h3>{store.name}</h3><p>{store.generation_budget} créditos disponíveis</p>
         <input type="hidden" name="store" value={store.id} />
         <label>Limite diário<input type="number" name="limit" min={1} max={1000} defaultValue={store.daily_limit} required /></label>
         <label className="consent"><input type="checkbox" name="suspended" defaultChecked={store.suspended} /> Suspender provador da loja</label>
         <button disabled={busy}>Salvar loja</button>
-      </form>)}
+      </form>
+      <form onSubmit={event => save(event, 'admin-credit')}>
+        <h3>Liberar créditos</h3>
+        <input type="hidden" name="store" value={store.id} />
+        <label>Quantidade<input type="number" name="amount" min={1} max={10000} required /></label>
+        <label>Referência única<input name="reference" minLength={4} maxLength={120} required /></label>
+        <button disabled={busy}>Liberar créditos</button>
+      </form>
+      </article>)}
     </>}
   </main>
 }
