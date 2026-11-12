@@ -11,10 +11,10 @@ export default function Page() {
 
   async function submit(event) {
     event.preventDefault()
-    if (busy || !piece) return
+    if (busy) return
     const form = new FormData(event.currentTarget)
-    if (form.get('photo').size > 4_000_000) {
-      setError('Escolha uma foto de até 4 MB.')
+    if (form.get('photo').size + (form.get('garment')?.size ?? 0) > 4_000_000) {
+      setError('As fotos juntas devem ter até 4 MB.')
       return
     }
     form.set('piece', piece)
@@ -38,12 +38,13 @@ export default function Page() {
 
   return <main>
     <header><p>Provador virtual</p><h1>Veja como fica em você</h1></header>
-    {piece ? <form onSubmit={submit}>
-      <label>Foto de frente <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required /></label>
+    <form onSubmit={submit}>
+      <label>Minha foto <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required /></label>
+      {!piece && <label>Foto da roupa <input type="file" name="garment" accept="image/jpeg,image/png,image/webp" required /></label>}
       <label className="consent"><input type="checkbox" name="consent" value="yes" required /> Autorizo o envio da foto à OpenAI para gerar esta simulação.</label>
       <button disabled={busy}>{busy ? 'Gerando sua prova…' : 'Experimentar em mim'}</button>
-    </form> : <p>Abra o link de uma peça para começar.</p>}
+    </form>
     {error && <p role="alert">{error}</p>}
-    {result && <section><h2>Sua prova</h2><img src={result} alt="Simulação de você com a peça" /><button onClick={() => setResult('')}>Limpar resultado</button></section>}
+    {result && <section><h2>Sua prova</h2><img src={result} alt="Simulação de você com a peça" /><a href={result} download="minha-prova.jpg">Baixar imagem</a><button onClick={() => setResult('')}>Limpar resultado</button></section>}
   </main>
 }
