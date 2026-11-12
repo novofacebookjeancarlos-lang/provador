@@ -1,0 +1,31 @@
+body:has(.showroom) { background: #f8faf6; color: #132a20 }
+.showroom { width: min(calc(100% - 96px), 1232px); margin: 0 auto; font-family: "Inter", system-ui, sans-serif }
+.showroom-nav { height: 80px; margin: 0; align-items: center; border-bottom: 1px solid #dce5da }
+.showroom a { color: inherit; text-decoration: none }
+.showroom a:hover { text-decoration: underline }
+.showroom-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 23px; font-weight: 750; letter-spacing: -.06em }
+.showroom-brand span { display: grid; place-items: center; background: #075e43; color: white; border-radius: 8px; width: 34px; height: 34px; font: italic 24px Georgia, serif }
+.showroom-nav > a:last-child { font-size: 14px; font-weight: 650 }
+.showroom-hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(28px, 5vw, 80px); align-items: center; padding: 34px 0 }
+.showroom h1 { font: 500 clamp(44px, 6vw, 89px)/.96 "Instrument Serif", Georgia, serif; letter-spacing: -.065em; margin: 0 }
+.showroom h1 em { color: #087151; font-weight: inherit }
+.showroom-copy p { font-size: clamp(16px, 1.55vw, 20px); line-height: 1.6; color: #465c4e; max-width: 33ch; margin: 26px 0 }
+.showroom .showroom-cta { display: inline-flex; gap: 24px; align-items: center; background: #075e43; color: #fff; padding: 15px 19px; border-radius: 6px; font-weight: 650 }
+.showroom-stage { min-width: 0; background: #dcebe0; border: 1px solid #d3e2d5; border-radius: 14px; padding: clamp(18px, 3vw, 40px); display: grid; place-items: center }
+.showroom-preview { width: min(100%, 370px); margin: 0; background: #fff; padding: 10px; border-radius: 13px; box-shadow: 0 18px 36px #173c2521 }
+.preview-title, .showroom-preview figcaption { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 5px; font-size: 13px }
+.preview-title span { color: #52695b }
+.showroom-preview img { display: block; aspect-ratio: 1/1; object-fit: cover; object-position: center 38%; border-radius: 6px }
+.showroom-preview figcaption { padding-bottom: 2px; font-weight: 650 }
+.showroom-preview figcaption a { color: #075e43; text-align: right }
+.showroom-flow { display: grid; grid-template-columns: repeat(3,1fr); gap: 25px; background: transparent; border-radius: 0; padding: 22px 0 0; border-top: 1px solid #dce5da; margin: 0 0 32px }
+.showroom-flow h2 { font-size: 18px; margin: 6px 0 }
+.showroom-flow p { color: #465c4e; font-size: 14px; line-height: 1.45 }
+@media (max-width: 720px) {
+  .showroom { width: calc(100% - 36px) }
+  .showroom-nav { height: 62px }
+  .showroom-hero { grid-template-columns: 1fr; gap: 26px; padding: 28px 0 }
+  .showroom h1 { font-size: clamp(42px, 10vw, 68px) }
+  .showroom-copy p { margin: 18px 0 }
+  .showroom-flow { grid-template-columns: 1fr; gap: 16px }
+}
