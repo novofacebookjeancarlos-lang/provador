@@ -3,10 +3,20 @@ import { useEffect, useState } from 'react'
 
 export default function Page() {
   const [piece, setPiece] = useState('')
+  const [item, setItem] = useState(null)
   const [result, setResult] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  useEffect(() => setPiece(new URLSearchParams(location.search).get('peca') ?? ''), [])
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get('peca') ?? ''
+    setPiece(id)
+    if (id) fetch('/api/peca?id=' + encodeURIComponent(id))
+      .then(async response => {
+        if (!response.ok) throw new Error('Peça indisponível.')
+        setItem(await response.json())
+      })
+      .catch(error => setError(error.message))
+  }, [])
   useEffect(() => () => { if (result) URL.revokeObjectURL(result) }, [result])
 
   async function submit(event) {
@@ -37,14 +47,17 @@ export default function Page() {
   }
 
   return <main>
-    <header><p>Provador virtual</p><h1>Veja como fica em você</h1></header>
-    <form onSubmit={submit}>
+    <nav><span>{item?.store || 'Provador virtual'}</span>{!piece && <a href="/painel">Painel do lojista</a>}</nav>
+    <header><h1>Veja como fica em você</h1></header>
+    {item && <section className="product"><h2>{item.name}</h2>{item.image && <img src={item.image} alt={item.name} />}</section>}
+    {(!piece || item) && <form onSubmit={submit}>
       <label>Minha foto <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required /></label>
       {!piece && <label>Foto da roupa <input type="file" name="garment" accept="image/jpeg,image/png,image/webp" required /></label>}
       <label className="consent"><input type="checkbox" name="consent" value="yes" required /> Autorizo o envio da foto à OpenAI para gerar esta simulação.</label>
       <button disabled={busy}>{busy ? 'Gerando sua prova…' : 'Experimentar em mim'}</button>
-    </form>
+    </form>}
     {error && <p role="alert">{error}</p>}
-    {result && <section><h2>Sua prova</h2><img src={result} alt="Simulação de você com a peça" /><a href={result} download="minha-prova.jpg">Baixar imagem</a><button onClick={() => setResult('')}>Limpar resultado</button></section>}
+    {item?.product && <p><a href={item.product}>Voltar para comprar</a></p>}
+    {result && <section><h2>Sua prova</h2><p>Simulação visual da peça.</p><img src={result} alt="Simulação de você com a peça" /><a href={result} download="minha-prova.jpg">Baixar imagem</a><button onClick={() => setResult('')}>Limpar resultado</button></section>}
   </main>
 }

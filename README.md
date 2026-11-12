@@ -1,22 +1,29 @@
 # Provador virtual
 
-Primeiro corte do piloto. O link /?peca=UUID abre uma prova para uma peça
-habilitada. A visitante envia uma foto e recebe uma simulação pela API da OpenAI.
+Next.js na Vercel, Supabase para login, catálogo, saldo e imagens de peças.
+OpenAI Images Edits em qualidade low. Fotos de visitantes e resultados
+são transitórios e retornam na própria requisição.
 
-## Rodar
+## Piloto
 
-1. Instale as dependências com npm install.
-2. Aplique a migração no projeto Supabase do provador.
-3. Configure as variáveis de .env.example no ambiente local e na Vercel.
-4. Cadastre uma loja e uma peça habilitada. A foto da peça deve estar em
-   HTTPS, no host de imagens controlado pelo piloto.
-5. Execute npm run dev ou faça o deploy e abra o link da peça.
+- / abre o teste com duas fotos e teto de 20 tentativas.
+- /painel permite criar conta, confirmar e-mail, cadastrar loja, cadastrar
+  uma foto por peça ou variante e copiar o link /?peca=UUID.
+- O link público mostra a peça e pede só a foto da visitante.
+- Pausar uma peça desativa seu link. O retorno à compra usa o link da loja.
+- Cada tentativa em loja reserva um crédito atomicamente. Falha confirmada
+  restitui o saldo. Timeout ou falha ambígua fica pendente para revisão.
+- Após confirmar um pagamento manual, o operador usa a função pilot_credit
+  no SQL Editor com ID da loja, quantidade e referência única do pagamento.
+  A mesma referência não credita duas vezes. Novas lojas começam com zero.
 
-Neste primeiro corte, a foto e o resultado passam apenas pela requisição
-e pela OpenAI. O app não grava as imagens. Cada tentativa reserva uma
-unidade do teto interno da loja, inclusive em falhas, para limitar gastos.
-Esse teto não representa faturamento do lojista.
+## Configuração
 
-Ainda faltam upload direto e armazenamento privado no R2, fila durável,
-proteção antibot, painel, recargas e integração com a vitrine.
-Mantenha o deploy protegido para testes internos até completar esses itens.
+Use npm ci e npm run build. Aplique as migrações em ordem no Supabase.
+Configure as variáveis de .env.example na Vercel. GARMENT_ASSET_HOST só
+é necessário para peças legadas que usam imagem externa. Configure a URL
+do painel no Auth do Supabase e o envio de e-mail de confirmação.
+
+A integração automática com a vitrine, checkout, fila durável e Cloudflare
+R2 seguem como próximos passos. O piloto usa Supabase Storage só para
+as fotos das peças. Limite a distribuição dos links durante o piloto.

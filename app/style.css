@@ -9,3 +9,20 @@ input[type=file] { display: block; margin-top: .75rem; max-width: 100% }
 button { border: 0; border-radius: .5rem; padding: .85rem; background: #284736; color: #fff; font: inherit; cursor: pointer }
 button:disabled { opacity: .65 }
 img { width: 100%; height: auto; border-radius: .5rem }
+nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; margin-bottom: 2rem; color: #4e6253 }
+a { color: #285742; text-underline-offset: .2em }
+h1 { font-size: clamp(2.5rem, 7vw, 4.1rem); line-height: 1.04 }
+h2, section p { margin: 0 }
+.dashboard { width: min(92%, 62rem) }
+input:not([type=file]):not([type=checkbox]) { display: block; width: 100%; border: 1px solid #bbc6b8; border-radius: .45rem; padding: .7rem; margin-top: .35rem; font: inherit }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 1rem }
+.metrics section { gap: .25rem; margin: 0 }
+.metrics strong { font: 2rem Georgia, serif }
+.secondary { background: #e4ebe2; color: #234331 }
+.notice { background: #e4ebe2; padding: .8rem; border-radius: .5rem }
+.inline { display: inline; background: transparent; padding: 0; margin: 0 }
+.piece-row { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; border-top: 1px solid #e4ebe2; padding-top: .75rem }
+.piece-row div { margin-right: auto }
+.piece-row small { display: block; color: #4e6253 }
+.product img { max-height: 15rem; object-fit: contain; width: auto; max-width: 100% }
+code { overflow-wrap: anywhere }
